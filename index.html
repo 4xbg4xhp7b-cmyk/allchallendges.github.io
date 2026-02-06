@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Hedge - Калькулятор всех челленджей</title>
+    <style>
+        :root {
+            --color-bg-base: #0f172a;
+            --color-bg-elevated: #1e293b;
+            --color-bg-surface: #334155;
+            --color-text-primary: #f1f5f9;
+            --color-text-secondary: #cbd5e1;
+            --color-text-muted: #94a3b8;
+            --color-primary: #38bdf8;
+            --color-success: #22c55e;
+            --color-error: #ef4444;
+            --color-warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--color-primary);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-primary);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--color-bg-elevated);
+            overflow-x: auto;
+            border-bottom: 1px solid var(--color-bg-surface);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--color-text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: var(--color-bg-surface);
+            color: var(--color-text-secondary);
+        }
+
+        .tab.active {
+            background: var(--color-bg-base);
+            color: var(--color-primary);
+            border-bottom: 3px solid var(--color-primary);
+        }
+
+        .content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--color-bg-elevated);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--color-bg-surface);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        .info-box {
+            background: var(--color-bg-elevated);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--color-warning);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-bg-elevated);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        th {
+            background: var(--color-bg-surface);
+            padding: 1rem;
+            text-align: left;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--color-bg-surface);
+            color: var(--color-text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .success { color: var(--color-success); }
+        .error { color: var(--color-error); }
+        .warning { color: var(--color-warning); }
+        .highlight { background: rgba(56, 189, 248, 0.2); padding: 0.2rem 0.5rem; border-radius: 4px; }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem;
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin: 1.5rem 0 0.8rem;
+            color: var(--color-text-secondary);
+        }
+
+        .scenario-card {
+            background: var(--color-bg-elevated);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            border: 2px solid var(--color-bg-surface);
+        }
+
+        .calculation-step {
+            background: var(--color-bg-surface);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.8rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+            color: var(--color-text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5rem; }
+            .tab { padding: 0.8rem 1rem; font-size: 0.9rem; }
+            .content { padding: 1rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            table { font-size: 0.85rem; }
+            th, td { padding: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Hash Hedge - Калькулятор хеджирования</h1>
+        <p style="color: var(--color-text-secondary); margin-top: 0.5rem;">Математическая модель для всех типов челленджей</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('starter')">STARTER $5K</button>
+        <button class="tab" onclick="showTab('boost')">BOOST $10K</button>
+        <button class="tab" onclick="showTab('pro')">PRO $25K</button>
+        <button class="tab" onclick="showTab('elite')">ELITE $50K</button>
+        <button class="tab" onclick="showTab('legend')">LEGEND $100K</button>
+    </div>
+
+    <div class="content">
+        <!-- STARTER $5,000 -->
+        <div id="starter" class="tab-content active">
+            <h2>STARTER - $5,000 челлендж</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Стоимость челленджа</div>
+                    <div class="stat-value error">$79</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Необходимый баланс биржи</div>
+                    <div class="stat-value success">$580</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">После покупки челленджа</div>
+                    <div class="stat-value">$501</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Счёт челленджа</div>
+                    <div class="stat-value">$5,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Остаток после Stage 2 успеха</div>
+                    <div class="stat-value success">~$75</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>✓ Оптимально:</strong> Для STARTER челленджа необходимый баланс на бирже - <strong class="highlight">$580</strong>, чтобы покрыть потери хеджа на обоих этапах. После успеха останется ~$75.
+            </div>
+
+            <h3>STAGE 1 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$5,000</td>
+                        <td>$501</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+8% (+$400)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$250 (5%)</td>
+                        <td>$79</td>
+                    </tr>
+                    <tr>
+                        <td>Плечо</td>
+                        <td>x5</td>
+                        <td>x5</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$1,250</td>
+                        <td class="highlight">$395</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$250, -5% счёта)</td>
+                        <td class="success">+20% (+$79)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+32% (+$400)</td>
+                        <td class="error">-32% (-$126)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: var(--color-success);">
+                <h3 style="color: var(--color-success);">✓ Сценарий успеха Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: +32% → +$400<br>
+                    Баланс: $5,000 → <span class="success">$5,400</span><br>
+                    <strong class="success">STAGE 1 ПРОЙДЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -32% → -$126<br>
+                    Баланс: $501 → <span class="warning">$375</span>
+                </div>
+                <p style="margin-top: 1rem; color: var(--color-text-muted);">Переход к Stage 2 с балансом биржи $45</p>
+            </div>
+
+            <div class="scenario-card" style="border-color: var(--color-error);">
+                <h3 style="color: var(--color-error);">✗ Сценарий провала Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: -20% → -$250<br>
+                    Баланс: $5,000 → <span class="error">$4,750 (-5%)</span><br>
+                    <strong class="error">ПРОВАЛЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: +20% → +$79<br>
+                    Баланс: $501 + $79 = <span class="success">$580</span>
+                </div>
+                <p style="margin-top: 1rem; color: var(--color-success);"><strong>✓ Биржа восстановлена до $580</strong><br>Можешь купить новый челлендж за $79<br>Останется: $501</p>
+            </div>
+
+            <h3>STAGE 2 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$5,000 (сброшен)</td>
+                        <td>$375</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+6% (+$300)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$250 (5%)</td>
+                        <td>$250</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$1,250</td>
+                        <td class="highlight">$1,250</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$250, -5% счёта)</td>
+                        <td class="success">+20% (+$250)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+24% (+$300)</td>
+                        <td class="error">-24% (-$300)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: #ffd700;">
+                <h3 style="color: #ffd700;">🏆 Полный успех Stage 2!</h3>
+                <div class="calculation-step">
+                    Челлендж: +24% → +$300<br>
+                    Баланс: $5,000 → <span class="success">$5,300</span><br>
+                    <strong style="color: #ffd700;">FUNDED ACCOUNT ПОЛУЧЕН!</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -24% → -$300<br>
+                    Баланс: $375 - $300 = <span class="success">$75</span><br>
+                    <strong class="success">✓ Остаток: $75</strong>
+                </div>
+            </div>
+
+            <div class="info-box" style="background: rgba(34, 197, 94, 0.1);">
+                <strong>✓ Буфер безопасности учтён:</strong><br>
+                • Общие потери хеджа: $126 (Stage 1) + $300 (Stage 2) = $426<br>
+                • Буфер включён в стартовый баланс $580<br>
+                • После успешного прохождения остаётся: <strong>~$75</strong>
+            </div>
+
+            <h3>📊 Итоговая таблица</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Сценарий</th>
+                        <th>Stage 1</th>
+                        <th>Stage 2</th>
+                        <th>Биржа после слива</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Оба пройдены</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="success">✓ +6%</td>
+                        <td class="success">$75 (funded account!)</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 2</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="error">✗ -5%</td>
+                        <td class="success">$580 ✓</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 1</td>
+                        <td class="error">✗ -5%</td>
+                        <td>—</td>
+                        <td class="success">$580 ✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BOOST $10,000 -->
+        <div id="boost" class="tab-content">
+            <h2>BOOST - $10,000 челлендж</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Стоимость челленджа</div>
+                    <div class="stat-value error">$99</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Необходимый баланс биржи</div>
+                    <div class="stat-value success">$1,007</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">После покупки челленджа</div>
+                    <div class="stat-value">$908</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Счёт челленджа</div>
+                    <div class="stat-value">$10,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Остаток после Stage 2 успеха</div>
+                    <div class="stat-value success">~$150</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>✓ Оптимально:</strong> Для BOOST челленджа необходимый баланс на бирже - <strong class="highlight">$1,007</strong>. Общие потери хеджа при успехе: $758. После успеха останется ~$150.
+            </div>
+
+            <h3>STAGE 1 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$10,000</td>
+                        <td>$908</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+8% (+$800)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$500 (5%)</td>
+                        <td>$99</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$2,500</td>
+                        <td class="highlight">$495</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$500, -5% счёта)</td>
+                        <td class="success">+20% (+$99)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+32% (+$800)</td>
+                        <td class="error">-32% (-$158)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: var(--color-success);">
+                <h3 style="color: var(--color-success);">✓ Сценарий успеха Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: +32% → +$800<br>
+                    Баланс: $10,000 → <span class="success">$10,800</span><br>
+                    <strong class="success">STAGE 1 ПРОЙДЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -32% → -$158<br>
+                    Баланс: $908 → <span class="warning">$750</span>
+                </div>
+            </div>
+
+            <div class="scenario-card" style="border-color: var(--color-error);">
+                <h3 style="color: var(--color-error);">✗ Сценарий провала Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: -20% → -$500<br>
+                    Баланс: $10,000 → <span class="error">$9,500 (-5%)</span><br>
+                    <strong class="error">ПРОВАЛЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: +20% → +$99<br>
+                    Баланс: $908 + $99 = <span class="success">$1,007</span>
+                </div>
+                <p style="margin-top: 1rem; color: var(--color-success);"><strong>✓ Биржа восстановлена до $1,007</strong></p>
+            </div>
+
+            <h3>STAGE 2 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$10,000 (сброшен)</td>
+                        <td>$750</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+6% (+$600)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$500 (5%)</td>
+                        <td>$500</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$2,500</td>
+                        <td class="highlight">$2,500</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$500, -5% счёта)</td>
+                        <td class="success">+20% (+$500)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+24% (+$600)</td>
+                        <td class="error">-24% (-$600)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>📊 Итоговая таблица</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Сценарий</th>
+                        <th>Stage 1</th>
+                        <th>Stage 2</th>
+                        <th>Биржа после слива</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Оба пройдены</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="success">✓ +6%</td>
+                        <td class="success">$150 (funded account!)</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 2</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="error">✗ -5%</td>
+                        <td class="success">$1,007 ✓</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 1</td>
+                        <td class="error">✗ -5%</td>
+                        <td>—</td>
+                        <td class="success">$1,007 ✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PRO $25,000 -->
+        <div id="pro" class="tab-content">
+            <h2>PRO - $25,000 челлендж</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Стоимость челленджа</div>
+                    <div class="stat-value error">$299</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Необходимый баланс биржи</div>
+                    <div class="stat-value success">$2,652</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">После покупки челленджа</div>
+                    <div class="stat-value">$2,353</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Счёт челленджа</div>
+                    <div class="stat-value">$25,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Остаток после Stage 2 успеха</div>
+                    <div class="stat-value success">~$375</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>✓ Оптимально:</strong> Для PRO челленджа необходимый баланс на бирже - <strong class="highlight">$2,652</strong>. Общие потери хеджа при успехе: $1,978. После успеха останется ~$375.
+            </div>
+
+            <h3>STAGE 1 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$25,000</td>
+                        <td>$2,353</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+8% (+$2,000)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$1,250 (5%)</td>
+                        <td>$299</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$6,250</td>
+                        <td class="highlight">$1,495</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$1,250, -5% счёта)</td>
+                        <td class="success">+20% (+$299)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+32% (+$2,000)</td>
+                        <td class="error">-32% (-$478)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: var(--color-success);">
+                <h3 style="color: var(--color-success);">✓ Сценарий успеха Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: +32% → +$2,000<br>
+                    Баланс: $25,000 → <span class="success">$27,000</span><br>
+                    <strong class="success">STAGE 1 ПРОЙДЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -32% → -$478<br>
+                    Баланс: $2,353 → <span class="warning">$1,875</span>
+                </div>
+            </div>
+
+            <div class="scenario-card" style="border-color: var(--color-error);">
+                <h3 style="color: var(--color-error);">✗ Сценарий провала Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: -20% → -$1,250<br>
+                    Баланс: $25,000 → <span class="error">$23,750 (-5%)</span><br>
+                    <strong class="error">ПРОВАЛЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: +20% → +$299<br>
+                    Баланс: $2,353 + $299 = <span class="success">$2,652</span>
+                </div>
+                <p style="margin-top: 1rem; color: var(--color-success);"><strong>✓ Биржа восстановлена до $2,652</strong></p>
+            </div>
+
+            <h3>STAGE 2 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$25,000 (сброшен)</td>
+                        <td>$1,875</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+6% (+$1,500)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$1,250 (5%)</td>
+                        <td>$1,250</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$6,250</td>
+                        <td class="highlight">$6,250</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$1,250, -5% счёта)</td>
+                        <td class="success">+20% (+$1,250)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+24% (+$1,500)</td>
+                        <td class="error">-24% (-$1,500)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: #ffd700;">
+                <h3 style="color: #ffd700;">🏆 Полный успех!</h3>
+                <div class="calculation-step">
+                    Челлендж Stage 2: +24% → +$1,500<br>
+                    Баланс: $25,000 → <span class="success">$26,500</span><br>
+                    <strong style="color: #ffd700;">FUNDED ACCOUNT ПОЛУЧЕН!</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -24% → -$1,500<br>
+                    Баланс: $1,875 → <span class="success">$375</span>
+                </div>
+            </div>
+
+            <h3>📊 Итоговая таблица</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Сценарий</th>
+                        <th>Stage 1</th>
+                        <th>Stage 2</th>
+                        <th>Биржа после слива</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: rgba(255, 215, 0, 0.1);">
+                        <td>Оба пройдены</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="success">✓ +6%</td>
+                        <td style="color: #ffd700;">🏆 Funded account!</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 2</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="error">✗ -5%</td>
+                        <td class="success">$2,652 ✓</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 1</td>
+                        <td class="error">✗ -5%</td>
+                        <td>—</td>
+                        <td class="success">$2,652 ✓</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box" style="background: rgba(34, 197, 94, 0.1);">
+                <strong>💡 Вероятности (винрейт 50%):</strong><br>
+                • Пройти оба этапа: <strong>25%</strong><br>
+                • Среднее количество попыток: <strong>4</strong><br>
+                • С бюджетом $2,652 (~9 попыток): вероятность успеха <strong>90%</strong><br>
+                • После успеха остаётся ~$375 на бирже
+            </div>
+        </div>
+
+        <!-- ELITE $50,000 -->
+        <div id="elite" class="tab-content">
+            <h2>ELITE - $50,000 челлендж</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Стоимость челленджа</div>
+                    <div class="stat-value error">$449</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Необходимый баланс биржи</div>
+                    <div class="stat-value success">$4,917</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">После покупки челленджа</div>
+                    <div class="stat-value">$4,468</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Счёт челленджа</div>
+                    <div class="stat-value">$50,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Остаток после Stage 2 успеха</div>
+                    <div class="stat-value success">~$750</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>✓ Оптимально:</strong> Для ELITE челленджа необходимый баланс на бирже - <strong class="highlight">$4,917</strong>. Общие потери хеджа при успехе: $3,718. После успеха останется ~$750.
+            </div>
+
+            <h3>STAGE 1 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$50,000</td>
+                        <td>$4,468</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+8% (+$4,000)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$2,500 (5%)</td>
+                        <td>$449</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$12,500</td>
+                        <td class="highlight">$2,245</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$2,500, -5% счёта)</td>
+                        <td class="success">+20% (+$449)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+32% (+$4,000)</td>
+                        <td class="error">-32% (-$718)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: var(--color-success);">
+                <h3 style="color: var(--color-success);">✓ Сценарий успеха Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: +32% → +$4,000<br>
+                    Баланс: $50,000 → <span class="success">$54,000</span><br>
+                    <strong class="success">STAGE 1 ПРОЙДЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -32% → -$718<br>
+                    Баланс: $4,468 → <span class="warning">$3,750</span>
+                </div>
+            </div>
+
+            <div class="scenario-card" style="border-color: var(--color-error);">
+                <h3 style="color: var(--color-error);">✗ Сценарий провала Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: -20% → -$2,500<br>
+                    Баланс: $50,000 → <span class="error">$47,500 (-5%)</span><br>
+                    <strong class="error">ПРОВАЛЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: +20% → +$449<br>
+                    Баланс: $4,468 + $449 = <span class="success">$4,917</span>
+                </div>
+                <p style="margin-top: 1rem; color: var(--color-success);"><strong>✓ Биржа восстановлена до $4,917</strong></p>
+            </div>
+
+            <h3>STAGE 2 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$50,000 (сброшен)</td>
+                        <td>$3,750</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+6% (+$3,000)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$2,500 (5%)</td>
+                        <td>$2,500</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$12,500</td>
+                        <td class="highlight">$12,500</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$2,500, -5% счёта)</td>
+                        <td class="success">+20% (+$2,500)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+24% (+$3,000)</td>
+                        <td class="error">-24% (-$3,000)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>📊 Итоговая таблица</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Сценарий</th>
+                        <th>Stage 1</th>
+                        <th>Stage 2</th>
+                        <th>Биржа после слива</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Оба пройдены</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="success">✓ +6%</td>
+                        <td style="color: #ffd700;">🏆 Funded account!</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 2</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="error">✗ -5%</td>
+                        <td class="success">$4,917 ✓</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 1</td>
+                        <td class="error">✗ -5%</td>
+                        <td>—</td>
+                        <td class="success">$4,917 ✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LEGEND $100,000 -->
+        <div id="legend" class="tab-content">
+            <h2>LEGEND - $100,000 челлендж</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Стоимость челленджа</div>
+                    <div class="stat-value error">$799</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Необходимый баланс биржи</div>
+                    <div class="stat-value success">$9,577</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">После покупки челленджа</div>
+                    <div class="stat-value">$8,778</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Счёт челленджа</div>
+                    <div class="stat-value">$100,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Остаток после Stage 2 успеха</div>
+                    <div class="stat-value success">~$1,500</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>✓ Оптимально:</strong> Для LEGEND челленджа необходимый баланс на бирже - <strong class="highlight">$9,577</strong>. Общие потери хеджа при успехе: $7,278. После успеха останется ~$1,500.
+            </div>
+
+            <h3>STAGE 1 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$100,000</td>
+                        <td>$8,778</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+8% (+$8,000)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$5,000 (5%)</td>
+                        <td>$799</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$25,000</td>
+                        <td class="highlight">$3,995</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$5,000, -5% счёта)</td>
+                        <td class="success">+20% (+$799)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+32% (+$8,000)</td>
+                        <td class="error">-32% (-$1,278)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="scenario-card" style="border-color: var(--color-success);">
+                <h3 style="color: var(--color-success);">✓ Сценарий успеха Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: +32% → +$8,000<br>
+                    Баланс: $100,000 → <span class="success">$108,000</span><br>
+                    <strong class="success">STAGE 1 ПРОЙДЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: -32% → -$1,278<br>
+                    Баланс: $8,778 → <span class="warning">$7,500</span>
+                </div>
+            </div>
+
+            <div class="scenario-card" style="border-color: var(--color-error);">
+                <h3 style="color: var(--color-error);">✗ Сценарий провала Stage 1</h3>
+                <div class="calculation-step">
+                    Челлендж: -20% → -$5,000<br>
+                    Баланс: $100,000 → <span class="error">$95,000 (-5%)</span><br>
+                    <strong class="error">ПРОВАЛЕН</strong>
+                </div>
+                <div class="calculation-step">
+                    Биржа: +20% → +$799<br>
+                    Баланс: $8,778 + $799 = <span class="success">$9,577</span>
+                </div>
+                <p style="margin-top: 1rem; color: var(--color-success);"><strong>✓ Биржа восстановлена до $9,577</strong></p>
+            </div>
+
+            <h3>STAGE 2 - Детальные расчёты</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Параметр</th>
+                        <th>Челлендж</th>
+                        <th>Биржа (хедж)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Баланс счёта</td>
+                        <td>$100,000 (сброшен)</td>
+                        <td>$7,500</td>
+                    </tr>
+                    <tr>
+                        <td>Цель прибыли</td>
+                        <td class="success">+6% (+$6,000)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Маржа под позицию</td>
+                        <td>$5,000 (5%)</td>
+                        <td>$5,000</td>
+                    </tr>
+                    <tr>
+                        <td>Позиция в рынке</td>
+                        <td class="highlight">$25,000</td>
+                        <td class="highlight">$25,000</td>
+                    </tr>
+                    <tr>
+                        <td>Стоп-лосс</td>
+                        <td class="error">-20% (-$5,000, -5% счёта)</td>
+                        <td class="success">+20% (+$5,000)</td>
+                    </tr>
+                    <tr>
+                        <td>Тейк-профит</td>
+                        <td class="success">+24% (+$6,000)</td>
+                        <td class="error">-24% (-$6,000)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>📊 Итоговая таблица</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Сценарий</th>
+                        <th>Stage 1</th>
+                        <th>Stage 2</th>
+                        <th>Биржа после слива</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Оба пройдены</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="success">✓ +6%</td>
+                        <td style="color: #ffd700;">🏆 Funded account!</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 2</td>
+                        <td class="success">✓ +8%</td>
+                        <td class="error">✗ -5%</td>
+                        <td class="success">$9,577 ✓</td>
+                    </tr>
+                    <tr>
+                        <td>Слив Stage 1</td>
+                        <td class="error">✗ -5%</td>
+                        <td>—</td>
+                        <td class="success">$9,577 ✓</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box" style="background: rgba(34, 197, 94, 0.1);">
+                <strong>✓ Буфер безопасности учтён:</strong><br>
+                • Общие потери хеджа: $1,278 (Stage 1) + $6,000 (Stage 2) = $7,278<br>
+                • Буфер включён в стартовый баланс $9,577<br>
+                • После успешного прохождения остаётся: <strong>~$1,500</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+
